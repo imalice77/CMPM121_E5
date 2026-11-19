@@ -40,3 +40,9 @@ Deno.test("a puzzle is solved when every crate sits on a goal", () => {
   assertEquals(isSolved(corridor), false);
   assertEquals(isSolved(solved), true);
 });
+
+Deno.test("only moves that push a crate count as pushes", () => {
+  const after = move(move(corridor, "right"), "right");
+  assertEquals(after.moves, 2);
+  assertEquals(after.pushes, 1);
+});

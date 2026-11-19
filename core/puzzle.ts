@@ -23,6 +23,7 @@ export interface Puzzle {
   readonly player: Position;
   readonly crates: readonly Position[];
   readonly moves: number;
+  readonly pushes: number;
 }
 
 const STEP: Record<Direction, Position> = {
@@ -37,7 +38,7 @@ export function samePosition(a: Position, b: Position): boolean {
 }
 
 function includes(list: readonly Position[], p: Position): boolean {
-  return list.some((q) => samePosition(q, p));
+  return list.some((q) => samePosition(p, q));
 }
 
 export function isWall(layout: Layout, p: Position): boolean {
@@ -58,8 +59,8 @@ function nextPosition(p: Position, direction: Direction): Position {
 
 /**
  * Reads a level drawn in the common Sokoban text format:
- * `#` wall, `@` player, `$` crate, `.` goal, `*` crate on a goal,
- * `+` player on a goal, and a space for floor.
+ * `#` wall, @ player, $ crate, . goal, * crate on a goal,
+ * + player on a goal, and a space for floor.
  */
 export function parsePuzzle(name: string, rows: readonly string[]): Puzzle {
   const walls: Position[] = [];
@@ -80,7 +81,7 @@ export function parsePuzzle(name: string, rows: readonly string[]): Puzzle {
   }
   const width = Math.max(...rows.map((row) => row.length));
   const layout = { name, width, height: rows.length, walls, goals };
-  return { layout, player, crates, moves: 0 };
+  return { layout, player, crates, moves: 0, pushes: 0 };
 }
 
 /**
@@ -100,6 +101,7 @@ export function move(puzzle: Puzzle, direction: Direction): Puzzle {
     player: target,
     crates: puzzle.crates.map((c) => samePosition(c, target) ? beyond : c),
     moves: puzzle.moves + 1,
+    pushes: puzzle.pushes + 1,
   };
 }
 
