@@ -61,6 +61,7 @@ export function App({ session }: { session: Session }) {
         )}
         <button
           type="button"
+          disabled={state.past.length === 0}
           onClick={() => session.dispatch({ kind: "undo" })}
         >
           Undo

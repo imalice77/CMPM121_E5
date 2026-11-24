@@ -19,11 +19,16 @@ export interface SessionState {
   /** Index into LEVELS. */
   readonly level: number;
   readonly puzzle: Puzzle;
+  readonly past: readonly Puzzle[];
 }
 
 export function startLevel(level: number): SessionState {
   const { name, rows } = LEVELS[level];
-  return { level, puzzle: parsePuzzle(name, rows) };
+  return {
+    level,
+    puzzle: parsePuzzle(name, rows),
+    past: [],
+  };
 }
 
 /**
@@ -35,14 +40,23 @@ export function update(state: SessionState, command: Command): SessionState {
     case "move": {
       if (isSolved(state.puzzle)) return state;
       const puzzle = move(state.puzzle, command.direction);
-      return puzzle === state.puzzle ? state : { ...state, puzzle };
+      return puzzle === state.puzzle
+        ? state
+        : { ...state, puzzle, past: [...state.past, state.puzzle] };
     }
     case "restart":
       return startLevel(state.level);
     case "choose-level":
       return startLevel(command.level);
-    case "undo":
-      return state;
+    case "undo": {
+      const puzzle = state.past.at(-1);
+      if (!puzzle) return state;
+      return {
+        ...state,
+        puzzle,
+        past: state.past.slice(0, -1),
+      };
+    }
   }
 }
 
@@ -51,7 +65,6 @@ export function update(state: SessionState, command: Command): SessionState {
 // React, the page, or the keyboard.
 export class Session {
   #state: SessionState;
-  #history: SessionState[] = [];
   readonly #listeners = new Set<() => void>();
 
   constructor(level = 0) {
@@ -66,28 +79,9 @@ export class Session {
   };
 
   dispatch(command: Command): void {
-    if (command.kind === "undo") {
-      const previous = this.#history.pop();
-      if (!previous) return;
-      this.#state = previous;
-      this.#notify();
-      return;
-    }
-
     const next = update(this.#state, command);
     if (next === this.#state) return;
-
-    if (command.kind === "move") {
-      this.#history.push(this.#state);
-    } else {
-      this.#history = [];
-    }
-
     this.#state = next;
-    this.#notify();
-  }
-
-  #notify(): void {
     for (const listener of this.#listeners) listener();
   }
 }

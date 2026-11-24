@@ -21,18 +21,14 @@ const KEYS: Record<string, Command> = {
   a: { kind: "move", direction: "left" },
   d: { kind: "move", direction: "right" },
   r: { kind: "restart" },
+  z: { kind: "undo" },
 };
 
 const keyboard: Controller = {
   label: "Keyboard",
   attach(session) {
     const onKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        session.dispatch({ kind: "undo" });
-        return;
-      }
-
+      // Leave shortcuts such as Cmd+R and Ctrl+Z to the browser.
       if (event.metaKey || event.ctrlKey || event.altKey) return;
 
       const command = KEYS[event.key.toLowerCase()];
