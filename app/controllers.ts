@@ -27,10 +27,17 @@ const keyboard: Controller = {
   label: "Keyboard",
   attach(session) {
     const onKeyDown = (event: KeyboardEvent) => {
-      // Leave shortcuts such as Cmd+R and Ctrl+Z to the browser.
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        session.dispatch({ kind: "undo" });
+        return;
+      }
+
       if (event.metaKey || event.ctrlKey || event.altKey) return;
+
       const command = KEYS[event.key.toLowerCase()];
       if (!command) return;
+
       event.preventDefault();
       session.dispatch(command);
     };
